@@ -1,0 +1,8 @@
+{
+	"BuildId": "43139311",
+	"Modules": 
+	{
+		"AlienDocGame": "UnrealEditor-AlienDocGame.dylib",
+		"AlienDocGeminiVA": "UnrealEditor-AlienDocGeminiVA.dylib"
+	}
+}
