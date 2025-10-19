@@ -7,7 +7,12 @@
 			"files": [
 				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/IA_Talk.uasset",
 				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Input/IMC_Hands.uasset",
-				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/VRPawn.uasset"
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/VRPawn.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Maps/VRTemplateMap.umap",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/NewBlueprint.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/NewBlueprint1.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/VRGameMode.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRSpectator/VRSpectator.uasset"
 			]
 		}
 	]
