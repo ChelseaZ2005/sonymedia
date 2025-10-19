@@ -5,10 +5,39 @@
 #include "Misc/Base64.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
+#include "AudioCapture.h"
+#include "IAudioCapture.h"
+#include "HAL/PlatformProcess.h"
 
 UGeminiVoiceAssistantSubsystem::UGeminiVoiceAssistantSubsystem(){}
 
-void UGeminiVoiceAssistantSubsystem::StartListening(){}
+void UGeminiVoiceAssistantSubsystem::StartListening()
+{
+    if (bCapturing) return;
+    TSharedPtr<Audio::IAudioCapture> Capture = Audio::FAudioCaptureFactory::CreateAudioCapture();
+    if (!Capture.IsValid()) { return; }
+
+    Audio::FCaptureDeviceInfo Info;
+    if (!Capture->GetDefaultCaptureDeviceInfo(Info)) { return; }
+    SampleRate = (int32)Info.SampleRate;
+    NumChannels = (int32)Info.NumInputChannels;
+    CapturedPCM.Reset();
+    bCapturing = true;
+
+    auto OnData = [this](const void* InBuffer, int32 NumFrames, int32 InNumChannels, double, bool)
+    {
+        if (!bCapturing) { return; }
+        const int32 NumSamples = NumFrames * InNumChannels;
+        const float* Src = static_cast<const float*>(InBuffer);
+        CapturedPCM.Append(Src, NumSamples);
+    };
+
+    const int32 FramesPerBlock = 1024;
+    if (Capture->OpenCaptureStream(Info, FramesPerBlock, OnData))
+    {
+        Capture->StartStream();
+    }
+}
 
 static void WriteWav(const TArray<int16>& PCM16, int32 SampleRate, int32 NumChannels, TArray<uint8>& Out)
 {
@@ -33,14 +62,39 @@ void UGeminiVoiceAssistantSubsystem::BuildSilentWav(TArray<uint8>& OutWav)
 
 void UGeminiVoiceAssistantSubsystem::StopAndSend()
 {
-	TArray<uint8> Wav; BuildSilentWav(Wav);
+    bCapturing = false;
+    // Convert captured float PCM to int16
+    TArray<int16> P16;
+    P16.Reserve(CapturedPCM.Num());
+    for (float v : CapturedPCM)
+    {
+        float c = FMath::Clamp(v, -1.0f, 1.0f);
+        P16.Add((int16)FMath::RoundToInt(c * 32767.0f));
+    }
+    TArray<uint8> Wav;
+    if (P16.Num() == 0)
+    {
+        BuildSilentWav(Wav);
+    }
+    else
+    {
+        WriteWav(P16, SampleRate, NumChannels, Wav);
+    }
 	SendToGemini(Wav);
 }
 
 void UGeminiVoiceAssistantSubsystem::SendToGemini(const TArray<uint8>& Wav)
 {
-	FString ApiKey = FPlatformMisc::GetEnvironmentVariable(TEXT("GEMINI_API_KEY"));
-	if (ApiKey.IsEmpty()) { OnGeminiResponse.Broadcast(TEXT("GEMINI_API_KEY not set")); return; }
+    FString ApiKey;
+    if (GConfig)
+    {
+        GConfig->GetString(TEXT("Gemini"), TEXT("ApiKey"), ApiKey, GGameIni);
+    }
+    if (ApiKey.IsEmpty())
+    {
+        ApiKey = FPlatformMisc::GetEnvironmentVariable(TEXT("GEMINI_API_KEY"));
+    }
+    if (ApiKey.IsEmpty()) { OnGeminiResponse.Broadcast(TEXT("Gemini API key not set")); return; }
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Req = FHttpModule::Get().CreateRequest();
 	Req->SetURL(TEXT("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=") + ApiKey);
 	Req->SetVerb(TEXT("POST"));
@@ -93,5 +147,14 @@ void UGeminiVoiceAssistantSubsystem::SendToGemini(const TArray<uint8>& Wav)
 	});
 	Req->ProcessRequest();
 }
+
+void UGeminiVoiceAssistantSubsystem::SpeakText(const FString& Text)
+{
+#if PLATFORM_MAC
+    const FString Esc = FString::Printf(TEXT("\"%s\""), *Text.Replace(TEXT("\""), TEXT("\\\"")));
+    FPlatformProcess::ExecProcess(TEXT("/bin/zsh"), *FString::Printf(TEXT("-lc say %s"), *Esc), nullptr, nullptr, nullptr);
+#endif
+}
+
 
 

@@ -1,6 +1,6 @@
 using UnrealBuildTool;
 
-public class AlienDocGeminiVA : ModuleRules
+    public class AlienDocGeminiVA : ModuleRules
 {
 	public AlienDocGeminiVA(ReadOnlyTargetRules Target) : base(Target)
 	{
@@ -12,9 +12,12 @@ public class AlienDocGeminiVA : ModuleRules
 			"Engine",
 			"HTTP",
 			"Json",
-			"JsonUtilities"
+                "JsonUtilities",
+                "AudioCapture",
+                "AudioMixer"
 		});
 	}
 }
+
 
 

@@ -1,0 +1,14 @@
+{
+	"version": 1,
+	"changelists": [
+		{
+			"guid": "00000000000000000000000000000000",
+			"description": "Default Uncontrolled Changelist",
+			"files": [
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/IA_Talk.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Input/IMC_Hands.uasset",
+				"/Users/chelae/Desktop/sonymedia/AlienDoc_/Content/VRTemplate/Blueprints/VRPawn.uasset"
+			]
+		}
+	]
+}
