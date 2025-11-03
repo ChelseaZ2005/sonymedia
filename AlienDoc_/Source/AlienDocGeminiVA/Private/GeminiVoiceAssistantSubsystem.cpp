@@ -5,8 +5,9 @@
 #include "Misc/Base64.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
+#if !PLATFORM_ANDROID
 #include "AudioCapture.h"
-#include "IAudioCapture.h"
+#endif
 #include "HAL/PlatformProcess.h"
 
 UGeminiVoiceAssistantSubsystem::UGeminiVoiceAssistantSubsystem(){}
@@ -14,14 +15,20 @@ UGeminiVoiceAssistantSubsystem::UGeminiVoiceAssistantSubsystem(){}
 void UGeminiVoiceAssistantSubsystem::StartListening()
 {
     if (bCapturing) return;
+    CapturedPCM.Reset();
+#if !PLATFORM_ANDROID
     TSharedPtr<Audio::IAudioCapture> Capture = Audio::FAudioCaptureFactory::CreateAudioCapture();
     if (!Capture.IsValid()) { return; }
 
     Audio::FCaptureDeviceInfo Info;
     if (!Capture->GetDefaultCaptureDeviceInfo(Info)) { return; }
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 6
+    SampleRate = (int32)Info.PreferredSampleRate;
+    NumChannels = (int32)Info.InputChannels;
+#else
     SampleRate = (int32)Info.SampleRate;
     NumChannels = (int32)Info.NumInputChannels;
-    CapturedPCM.Reset();
+#endif
     bCapturing = true;
 
     auto OnData = [this](const void* InBuffer, int32 NumFrames, int32 InNumChannels, double, bool)
@@ -37,6 +44,12 @@ void UGeminiVoiceAssistantSubsystem::StartListening()
     {
         Capture->StartStream();
     }
+#else
+    // Android path: mic capture is not wired here yet; fall back to silence
+    bCapturing = true;
+    SampleRate = 16000;
+    NumChannels = 1;
+#endif
 }
 
 static void WriteWav(const TArray<int16>& PCM16, int32 SampleRate, int32 NumChannels, TArray<uint8>& Out)

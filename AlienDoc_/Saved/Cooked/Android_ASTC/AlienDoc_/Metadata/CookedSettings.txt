@@ -1,0 +1,7 @@
+[CookSettings]
+Version=21F52B9EDD4D456AB1AF381CA172BD28
+CookIncremental=false
+ExecutableHashInvalidModule=/Users/Shared/Epic Games/UE_5.6/Engine/Binaries/Mac/
+CookMode=CookByTheBook
+DLCName=
+
